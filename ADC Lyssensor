@@ -1,0 +1,106 @@
+/*
+ * adc_lightsesnsor.c
+ *  Author: Johan Nordahl
+ *
+ * Koden skal fungere som en funksjon kalt, og oppdaterer 2 variabler
+ * Jeg ser på, å endre den til switch case   
+ *
+ */ 
+
+
+// -------- Functions --------- //
+// For referanse: Ole sin startup
+void adc_initial_startup (void) {
+	// Enable ADC and ADPS2/1/0
+	// ADPS2/1/0 gives division factor 128 resulting in 125kHz
+	ADCSRA = (1 << ADEN) | (1 << ADATE) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
+	
+	// Set AVCC as ref with ADLAR 1 and ADC0 SE input
+	ADMUX = 0b01100000; // Likt med |= (1 << REFS0)?	
+}
+
+
+// Lager en funksjon: HVa skal den returne?
+// Void: Oppdaterer kun 2 globale verdier
+void ADC_Lightsensor (void) {
+	// -------- Inits --------- //
+	/*
+	// Er ADC init fra før?
+	initADC0();
+	*/
+	
+	
+	// -------- Variables --------- //
+	// Er ikke interesert i hva verdien er (trenger ikke konvertere?)
+	// Hvis data er over grenseverdi, er det dag, ellers natt
+	// Grense verdi for Dag/Natt
+	const uint16_t ADC_Threshold_Value = 500;		// Random number for test
+	uint16_t ADC_Current_Value;
+	
+	// State-maskin
+	uint8_t Light_Current_State;
+	// Starter ved å anta at det er dag, siden da gjør den ingen ting
+	uint8_t Light_Previous_State = 1;		
+	
+	
+	// -------- Code --------- //
+	// ADC: Leser fra ADC
+	ADCSRA |= (1 << ADSC); // Start ADC conversion
+	loop_until_bit_is_clear(ADCSRA, ADSC); // Wait until done
+	ADC_Current_Value = ADC; // Read ADC in
+	
+	
+	// Er ikke interesert i Volt verdien, bare om det er mer/mindre lys enn kravet
+	// Gjør om til switch case
+	if (ADC_Current_Value > ADC_Threshold_Value) {
+		// Dag
+		Light_Current_State = 1;
+	}
+	else {
+		// Natt
+		Light_Current_State = 0;
+	}
+	
+	// Light_Previous_State er udefinert første gang, hva skjer her?
+	// Light_Previous_State starter opp som dag
+	if (Light_Current_State != Light_Previous_State) {
+		// Dag
+		if (Light_Current_State = 1) {
+			Light_Ekstra_Varmth = 0;
+			Light_Nightlight = 0;
+		}
+		// Natt
+		else {
+			Light_Ekstra_Varmth = 0.2;
+			Light_Nightlight = 1;
+		}
+		// Setter previous state
+		Light_Previous_State = Light_Current_State;
+	}
+} // Slutten på Funksjonen: ADC_Lightsensor
+
+
+int main (void) {
+	// -------- ADC Light --------- //
+	// Disse er de eneste som trenger være globale
+
+	// Varmer ekstra om natten
+	// Brukes slik Varme = Varme_fra_ovn + (Varme_fra_ovn * Light_Ekstra_Varmth)
+	float Light_Ekstra_Varmth;
+
+	// LED nattlys, for å se panelet
+	uint8_t Light_Nightlight;
+
+	// Setter LED-pin til output
+	// Pin kan endres
+	DDRB |= (1 << PB0); /* Data Direction Register B: writing a one to the bit enables output. */
+
+	
+	// ------ Event loop ------ //
+	do {
+		// Stuff
+		// Kall Funksjonen ADC_Lightsensor
+		}
+	} while (1); // End event loop
+	return (0); // This line is never reached
+}
