@@ -16,9 +16,12 @@
 
 // Varmer ekstra om natten
 // Brukes slik Varme = Varme_fra_ovn + (Varme_fra_ovn * Light_Extra_Varmth)
-float Light_Extra_Varmth = 0;
+// Setter en Pin High/Low i stedet
+// float Light_Extra_Varmth = 0;
 
 int main (void) {
+
+	
 	// ------ Event loop ------ //
 	do {
 		// Stuff
@@ -30,25 +33,21 @@ int main (void) {
 
 
 // -------- Functions --------- //
-// For referanse: Ole sin startup
-void adc_initial_startup (void) {
+
+// Lager en funksjon: Hva skal den returne?
+// Void: Oppdaterer kun 1 global verdi
+void ADC_Lightsensor (void) {
+	
+	// -------- Inits --------- //
+	
 	// Enable ADC and ADPS2/1/0
 	// ADPS2/1/0 gives division factor 128 resulting in 125kHz
 	ADCSRA = (1 << ADEN) | (1 << ADATE) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 	
 	// Set AVCC as ref with ADLAR 1 and ADC0 SE input
-	ADMUX = 0b01100000; // Likt med |= (1 << REFS0)?
-}
-
-// Lager en funksjon: Hva skal den returne?
-// Void: Oppdaterer kun 1 global verdi
-void ADC_Lightsensor (void) {
-	// -------- Inits --------- //
-	/*
-	// Er ADC init fra før?
-	initADC0();
-	*/
-	
+	// PIN 0-3 bestemmer read: Her ADC0, Jeg tar adc2: 0b01100010
+	#define ADMUX_ADC2 0b01100010
+	ADMUX = ADMUX_ADC2;
 	
 	// -------- Variables --------- //
 	// Er ikke interesert i hva verdien er (trenger ikke konvertere?)
@@ -63,9 +62,13 @@ void ADC_Lightsensor (void) {
 	uint8_t Light_Previous_State = 1;
 	
 	// LED nattlys, for å se panelet
-	// Setter LED-pin til output
+	// Varmer ekstra om natten
+	// Setter pinS til output
 	// Pin kan endres
-	DDRB |= (1 << PB1); /* Data Direction Register B: writing a one to the bit enables output. */		
+	// PB5 satt som Night-Light pin
+	#define Night_Light PB1
+	#define Night_Varmth PB5
+	DDRB |= (1 << Night_Light) | (1 << Night_Varmth); /* Data Direction Register B: writing a one to the bit enables output. */
 	
 	
 	// -------- Code --------- //
@@ -76,7 +79,7 @@ void ADC_Lightsensor (void) {
 	
 	
 	// Er ikke interesert i Volt verdien, bare om det er mer/mindre lys enn kravet
-	// Gjør om til switch case
+	// Gjør om til switch case?
 	if (ADC_Current_Value > ADC_Threshold_Value) {
 		// Dag
 		Light_Current_State = 1;
@@ -91,15 +94,13 @@ void ADC_Lightsensor (void) {
 	if (Light_Current_State != Light_Previous_State) {
 		// Dag
 		if (Light_Current_State == 1) {
-			Light_Extra_Varmth = 0;
-			// Slår av nattlys
-			PORTB = (0 << PB1);
+			// Slår av nattlys og varme
+			PORTB = (0 << Night_Light) | (0 << Night_Varmth);
 		}
 		// Natt
 		else {
-			Light_Extra_Varmth = 0.2;
-			// Slår på nattlys
-			PORTB = (1 << PB1);
+			// Slår på nattlys og varme
+			PORTB = (1 << Night_Light) | (1 << Night_Varmth);
 		}
 		// Setter previous state
 		Light_Previous_State = Light_Current_State;
