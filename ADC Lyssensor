@@ -9,6 +9,26 @@
 // ------- Preamble -------- //
 #include <avr/io.h>
 
+#define F_CPU 16e6
+
+// -------- ADC Light --------- //
+// Disse er de eneste som trenger være globale
+
+// Varmer ekstra om natten
+// Brukes slik Varme = Varme_fra_ovn + (Varme_fra_ovn * Light_Extra_Varmth)
+float Light_Extra_Varmth = 0;
+
+int main (void) {
+	// ------ Event loop ------ //
+	do {
+		// Stuff
+		// Kall Funksjonen ADC_Lightsensor
+		ADC_Lightsensor();
+	} while (1); // End event loop
+	return (0); // This line is never reached
+}
+
+
 // -------- Functions --------- //
 // For referanse: Ole sin startup
 void adc_initial_startup (void) {
@@ -17,12 +37,11 @@ void adc_initial_startup (void) {
 	ADCSRA = (1 << ADEN) | (1 << ADATE) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 	
 	// Set AVCC as ref with ADLAR 1 and ADC0 SE input
-	ADMUX = 0b01100000; // Likt med |= (1 << REFS0)?	
+	ADMUX = 0b01100000; // Likt med |= (1 << REFS0)?
 }
 
-
 // Lager en funksjon: Hva skal den returne?
-// Void: Oppdaterer kun 2 globale verdier
+// Void: Oppdaterer kun 1 global verdi
 void ADC_Lightsensor (void) {
 	// -------- Inits --------- //
 	/*
@@ -41,7 +60,12 @@ void ADC_Lightsensor (void) {
 	// State-maskin
 	uint8_t Light_Current_State;
 	// Starter ved å anta at det er dag, siden da gjør den ingen ting
-	uint8_t Light_Previous_State = 1;		
+	uint8_t Light_Previous_State = 1;
+	
+	// LED nattlys, for å se panelet
+	// Setter LED-pin til output
+	// Pin kan endres
+	DDRB |= (1 << PB1); /* Data Direction Register B: writing a one to the bit enables output. */		
 	
 	
 	// -------- Code --------- //
@@ -66,7 +90,7 @@ void ADC_Lightsensor (void) {
 	// Light_Previous_State starter opp som dag
 	if (Light_Current_State != Light_Previous_State) {
 		// Dag
-		if (Light_Current_State = 1) {
+		if (Light_Current_State == 1) {
 			Light_Extra_Varmth = 0;
 			// Slår av nattlys
 			PORTB = (0 << PB1);
@@ -79,28 +103,5 @@ void ADC_Lightsensor (void) {
 		}
 		// Setter previous state
 		Light_Previous_State = Light_Current_State;
-	}
+	} 
 } // Slutten på Funksjonen: ADC_Lightsensor
-
-
-int main (void) {
-	// -------- ADC Light --------- //
-	// Disse er de eneste som trenger være globale
-
-	// Varmer ekstra om natten
-	// Brukes slik Varme = Varme_fra_ovn + (Varme_fra_ovn * Light_Extra_Varmth)
-	float Light_Extra_Varmth = 0;
-
-	// LED nattlys, for å se panelet
-	// Setter LED-pin til output
-	// Pin kan endres
-	DDRB |= (1 << PB1); /* Data Direction Register B: writing a one to the bit enables output. */
-	
-	// ------ Event loop ------ //
-	do {
-		// Stuff
-		// Kall Funksjonen ADC_Lightsensor
-		ADC_Lightsensor();
-	} while (1); // End event loop
-	return (0); // This line is never reached
-}
