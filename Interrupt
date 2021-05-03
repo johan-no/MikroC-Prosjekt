@@ -1,0 +1,26 @@
+#define F_CPU 16000000UL
+
+#include <avr/io.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
+
+
+int main(void){
+	sei();							//Enable interrupts
+    DDRB = (1 << PORTB0);			//LED
+	
+	PORTD = (1 << PORTD2);			//Intern resistor
+	
+	EIMSK = (1 << INT0);			//Enable INT0
+	
+    while (1){
+		_delay_ms(500);
+	}
+    
+}
+
+ISR(INT0_vect){						//INT0 funksjon
+	
+	PORTB ^= (1 << PORTB0);			//Toggle LED
+	_delay_ms(500);					//Debouncing
+}
