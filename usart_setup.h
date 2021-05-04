@@ -1,4 +1,4 @@
-﻿/*
+/*
  * usart_setup.h
  *
   *
@@ -28,6 +28,13 @@ void usart_transmit(uint8_t data)
 	// Wait for empty transmit buffer
 	//while( (!(UCSR0A & (1 << UDRE0))))
 	UDR0 = data;
+}
+
+int uart_putchar(char c, FILE *stream)
+{
+	loop_until_bit_is_set(UCSR0A, UDRE0);
+	UDR0 = c;
+	return 0;
 }
 
 
