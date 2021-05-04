@@ -1,4 +1,4 @@
-# MirkoC-Porsjekt
+# MikroC-Prosjekt
 
 
 USART/PC USB:
