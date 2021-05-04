@@ -1,20 +1,18 @@
-/*
- * adc_setup.h
+﻿/*
+ * SETUP_adc.h
  *
- *  Author: olemarh
- *	
- *	Initial configuration of ADC
- *	
+ * Created: 04.05.2021 15:05:31
+ *  Author: Grand Wizard Ølë
  */ 
 
 
-#ifndef ADC_SETUP_H_
-#define ADC_SETUP_H_
+#ifndef SETUP_ADC_H_
+#define SETUP_ADC_H_
 
 // Single ended conversion is equal to:
 // ADC = (V_in * 1024) / V_ref
-// where V_ref = AV_CC = V_in, making it ADC = 1024
-
+// where V_ref = AV_CC = V_in, making it ADC = 1024 (10 bit)
+// ADCH will contain 8 of these, giving 0 - 255
 
 // ADIF = SET when ADC conversion complete
 // ADSC = SET WHILE converting, CLEAR when done
@@ -39,4 +37,6 @@ void adc_initial_startup(void)
 	// Set AVCC as ref with ADLAR 1 and ADC0 SE input as default
 }
 
-#endif /* ADC_SETUP_H_ */
+
+
+#endif /* SETUP_ADC_H_ */

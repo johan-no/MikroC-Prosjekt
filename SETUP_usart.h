@@ -1,16 +1,12 @@
-/*
- * usart_setup.h
- *
-  *
-  *  Author: olemarh
-  *
-  *	Initial configuration of USART
-  *
-  */
+﻿/*
+ * SETUP_usart.h
+ * Author: olemarh
+ * 
+ */ 
 
 
-#ifndef USART_SETUP_H_
-#define USART_SETUP_H_
+#ifndef SETUP_USART_H_
+#define SETUP_USART_H_
 
 #define BAUDRATE 9600
 #define UBRR_VALUE ((F_CPU / (BAUDRATE * 16UL)) - 1)
@@ -38,4 +34,6 @@ int uart_putchar(char c, FILE *stream)
 }
 
 
-#endif /* USART_SETUP_H_ */
+
+
+#endif /* SETUP_USART_H_ */
