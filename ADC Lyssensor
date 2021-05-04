@@ -66,9 +66,9 @@ void ADC_Lightsensor (void) {
 	// Setter pinS til output
 	// Pin kan endres
 	// PB5 satt som Night-Light pin
-	#define Night_Light PB1
-	#define Night_Varmth PB5
-	DDRB |= (1 << Night_Light) | (1 << Night_Varmth); /* Data Direction Register B: writing a one to the bit enables output. */
+	#define Night_Light PD4
+	#define Night_Varmth PD5
+	DDRD |= (1 << Night_Light) | (1 << Night_Varmth); /* Data Direction Register B: writing a one to the bit enables output. */
 	
 	
 	// -------- Code --------- //
