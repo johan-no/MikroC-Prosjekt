@@ -1,5 +1,4 @@
-/*
- * Project solution for IELET2111 Mikrokontrollersystemer, Spring 2021 
+/* Project solution for IELET2111 Mikrokontrollersystemer, Spring 2021 
  *
  * Project participants:
  *  - Johan Olav Nordahl
@@ -8,9 +7,9 @@
  *	
  */ 
 
-	 // ------------------------- //
-	// ------- Preamble -------- //
-   // ------------------------- //
+	  // ------------------------- //
+	 // ------- Preamble -------- //
+	// ------------------------- //
    
 #define F_CPU 16e6   
 
@@ -41,8 +40,15 @@ int main(void)
 	#define ADC0_DIG1 PORTD6
 	#define ADC0_DIG2 PORTD7
 	
+	// LED night-light to see panel
+	// Extra heat during night (PD5)
+	// Defining for easier handling
+	#define Night_Light PORTD4
+	#define Night_Warmth PORTD5
+	
 	// Set ADC0 as output
-	DDRD = (1 << ADC0_DIG1) | (1 << ADC0_DIG2);
+	// Set both LED and extra warmth as outputs
+	DDRD = (1 << ADC0_DIG1) | (1 << ADC0_DIG2) | (1 << Night_Light) | (1 << Night_Warmth);
 
 	// Timer configuration
 	// 1024x prescaler (set CS12 & CS10) and CTC mode with OCR1A top (mode 4 - set WGM12)
@@ -60,7 +66,7 @@ int main(void)
 	
 	// Internal resistor
 	PORTD = (1 << PORTD2);
-	
+
 	// Initialization of ADC and USART configurations
 	// Found in respective SETUP_*.h files
 	adc_initial_startup();
@@ -80,9 +86,9 @@ int main(void)
 		
 		_delay_ms(500);
 		
-		 // ------------------------------------------------------------------------- //
-		// ---- If-statements to sort and store ADCH into appropriate variables ---- //
-	   // ------------------------------------------------------------------------- //
+		  // ------------------------------------------------------------------------- //
+		 // ---- If-statements to sort and store ADCH into appropriate variables ---- //
+		// ------------------------------------------------------------------------- //
 	   
 		// If ADMUX is set to ADC0:
 		if (ADMUX == ADMUX_ADC0)
@@ -102,15 +108,13 @@ int main(void)
 		
 		else if (ADMUX == ADMUX_ADC2)
 		{
-			// Slight flaw with variable-naming as ADC2 utilizes the full 10-bit range
-			// Thus ADC2_ADCH stores entire ADC register and not just ADCH as with ADC0/1
-			ADC2_ADCH = ADC;
+			ADC2_ADCH = ADCH;
 			ADMUX = ADMUX_ADC0;
 		}
 		
-		 // --------------------------------------------------------------------------- //
-		// ---- If-statements for sorting ADC0 values to 2-channel digital output ---- //
-	   // --------------------------------------------------------------------------- //
+		  // --------------------------------------------------------------------------- //
+		 // ---- If-statements for sorting ADC0 values to 2-channel digital output ---- //
+		// --------------------------------------------------------------------------- //
 	   
 		if (ADC0_ADCH < 64)
 		{
@@ -118,51 +122,50 @@ int main(void)
 			//  0	 0	- 20% Power
 			PORTD = (0 << ADC0_DIG1) | (0 << ADC0_DIG2);
 		}
+		
 		else if ((63 < ADC0_ADCH) && (ADC0_ADCH < 128))
 		{
 			// DIG1	DIG2
 			//  0	 1 - 40% Power
 			PORTD = (0 << ADC0_DIG1) | (1 << ADC0_DIG2);
-			
 		}
+		
 		else if ((127 < ADC0_ADCH) && (ADC0_ADCH < 192))
 		{
 			// DIG1	DIG2
 			//  1	 0 - 60% Power
 			PORTD = (1 << ADC0_DIG1) | (0 << ADC0_DIG2);
-			
 		}
+		
 		else if (191 < ADC0_ADCH)
 		{
 			// DIG1	DIG2
 			//  1	 1 - 80% Power
 			PORTD = (1 << ADC0_DIG1) | (1 << ADC0_DIG2);
-			
 		}
 		
-		 // ------------------------------------------------------------------- //
-		// ---- If-statements for handling ADC1 values and related USART ----- //
-	   // ------------------------------------------------------------------- //
+		  // ------------------------------------------------------------------- //
+		 // ---- If-statements for handling ADC1 values and related USART ----- //
+		// ------------------------------------------------------------------- //
 	   
 		// Only (currently) used to relay information via USART
 		// 3 brackets as more do not add functionality; this is purely for demonstration
 		if (ADC1_ADCH < 86)
 		{
-			
-			puts("Current room temperature is: Cold\r\n");
+			puts("Cold\r\n");
 		}
 		else if ((85 < ADC1_ADCH) && (ADC1_ADCH < 171))
 		{
-			puts("Current room temperature is: Comfortable\r\n");
+			puts("Comfy\r\n");
 		}
 		else if (170 < ADC1_ADCH)
 		{
-			puts("Current room temperature is: Hot\r\n");
+			puts("Hot\r\n");
 		}
 		
-		 // --------------------------------------------------------------------- //
-		// ---- Initialize ADC2: light sensor + nightmode function handling ---- //
-	   // --------------------------------------------------------------------- //
+		  // --------------------------------------------------------------------- //
+		 // ---- Initialize ADC2: light sensor + nightmode function handling ---- //
+		// --------------------------------------------------------------------- //
 		ADC2_Lightsensor(ADC2_ADCH);
     }
 }
@@ -205,51 +208,46 @@ void ADC2_Lightsensor (uint16_t ADC_Current_Value)
 // ---------------------------- //
 	// Limits used for deciding day/night
 	// 500 used as this is equivalent to dark room when sun sets
-	const uint16_t ADC_Threshold_Value = 500;
+	const uint16_t ADC_Threshold_Value = 125;
 
 	// State-machine
 	uint8_t Light_Current_State;
 	// Initial state is assuming it is day, as this is least intrusive
 	uint8_t Light_Previous_State = 1;
-
-	// LED night-light to see panel
-	// Extra heat during night (PD5)
-	// Defining for easier handling
-	#define Night_Light PD4
-	#define Night_Warmth PD5
-	
-	// Set both LED and extra warmth as outputs
-	DDRD |= (1 << Night_Light) | (1 << Night_Warmth);	
-	
 	
   // ---------------------------- //
  // ------ Function code  ------ //
 // ---------------------------- //
 
 	// Initial check to compare current ADC value to threshold
-	if (ADC_Current_Value > ADC_Threshold_Value) {
+	if (ADC_Current_Value > ADC_Threshold_Value)
+	{
 		// Day
 		Light_Current_State = 1;
 	}
 	
-	else {
+	else
+	{
 		// Night
 		Light_Current_State = 0;
 	}
 	
 	// Checks if ADC_Current_Value has changed since last check
 	// Light_Previous_State initially starts as day
-	if (Light_Current_State != Light_Previous_State) {
+	if (Light_Current_State != Light_Previous_State)
+	{
 		// Day
-		if (Light_Current_State == 1) {
+		if (Light_Current_State == 1)
+		{
 			// Turn off night-light and extra warmth
-			PORTB = (0 << Night_Light) | (0 << Night_Warmth);
+			PORTD = (0 << Night_Light) | (0 << Night_Warmth);
 		}
 		
 		// Night
-		else {
+		else
+		{
 			// Turn on night-light and extra warmth
-			PORTB = (1 << Night_Light) | (1 << Night_Warmth);
+			PORTD = (1 << Night_Light) | (1 << Night_Warmth);
 		}
 		
 		// Set previous state
