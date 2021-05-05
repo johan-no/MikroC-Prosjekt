@@ -3,7 +3,7 @@
  * Project participants:
  *  - Johan Olav Nordahl
  *  - Ole Marcus Hovlid
- *  - Shinthujan Poothappilai
+ *  - Shinthujan Poothappillai
  *	
  */ 
 
@@ -48,15 +48,15 @@ int main(void)
 	
 	// Set ADC0 as output
 	// Set both LED and extra warmth as outputs
-	DDRD = (1 << ADC0_DIG1) | (1 << ADC0_DIG2) | (1 << Night_Light) | (1 << Night_Warmth);
-
+	DDRD |= (1 << ADC0_DIG1) | (1 << ADC0_DIG2) | (1 << Night_Light) | (1 << Night_Warmth);
+	
 	// Timer configuration
 	// 1024x prescaler (set CS12 & CS10) and CTC mode with OCR1A top (mode 4 - set WGM12)
 	// This gives 16e6/1024 = 15625 ticks pr. second
 	TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
 	
 	// PB0 (LED) og PB1/OC1A (Timer) as output
-	DDRB = (1 << PORTB0) | (1 << PORTB1);
+	DDRB |= (1 << PORTB0) | (1 << PORTB1);
 	
 	// Enable interrupts
 	sei();
@@ -65,7 +65,7 @@ int main(void)
 	EIMSK = (1 << INT0);
 	
 	// Internal resistor
-	PORTD = (1 << PORTD2);
+	PORTD |= (1 << PORTD2);
 
 	// Initialization of ADC and USART configurations
 	// Found in respective SETUP_*.h files
@@ -120,28 +120,31 @@ int main(void)
 		{
 			// DIG1	DIG2
 			//  0	 0	- 20% Power
-			PORTD = (0 << ADC0_DIG1) | (0 << ADC0_DIG2);
+			PORTD &= ~(1 << ADC0_DIG1);
+			PORTD &= ~(1 << ADC0_DIG2);
 		}
 		
 		else if ((63 < ADC0_ADCH) && (ADC0_ADCH < 128))
 		{
 			// DIG1	DIG2
 			//  0	 1 - 40% Power
-			PORTD = (0 << ADC0_DIG1) | (1 << ADC0_DIG2);
+			PORTD &= ~(1 << ADC0_DIG1);
+			PORTD |=  (1 << ADC0_DIG2);
 		}
 		
 		else if ((127 < ADC0_ADCH) && (ADC0_ADCH < 192))
 		{
 			// DIG1	DIG2
 			//  1	 0 - 60% Power
-			PORTD = (1 << ADC0_DIG1) | (0 << ADC0_DIG2);
+			PORTD |=  (1 << ADC0_DIG1);
+			PORTD &= ~(1 << ADC0_DIG2);
 		}
 		
 		else if (191 < ADC0_ADCH)
 		{
 			// DIG1	DIG2
 			//  1	 1 - 80% Power
-			PORTD = (1 << ADC0_DIG1) | (1 << ADC0_DIG2);
+			PORTD |= (1 << ADC0_DIG1) | (1 << ADC0_DIG2);
 		}
 		
 		  // ------------------------------------------------------------------- //
@@ -174,8 +177,8 @@ int main(void)
  // ---- INTERRUPT + TIMER ----- //
 // ---------------------------- //
 
-ISR(INT0_vect){
-	
+ISR(INT0_vect)
+{	
 	//Debouncing
 	_delay_ms(500);
 	
@@ -240,14 +243,14 @@ void ADC2_Lightsensor (uint16_t ADC_Current_Value)
 		if (Light_Current_State == 1)
 		{
 			// Turn off night-light and extra warmth
-			PORTD = (0 << Night_Light) | (0 << Night_Warmth);
+			PORTD &= ~(1 << Night_Light) | ~(1 << Night_Warmth);
 		}
 		
 		// Night
 		else
 		{
 			// Turn on night-light and extra warmth
-			PORTD = (1 << Night_Light) | (1 << Night_Warmth);
+			PORTD |= (1 << Night_Light) | (1 << Night_Warmth);
 		}
 		
 		// Set previous state
