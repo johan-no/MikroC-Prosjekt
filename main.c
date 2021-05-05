@@ -3,7 +3,7 @@
  * Project participants:
  *  - Johan Olav Nordahl
  *  - Ole Marcus Hovlid
- *  - Shinthujan Poothappilai
+ *  - Shinthujan Poothappillai
  *	
  */ 
 
