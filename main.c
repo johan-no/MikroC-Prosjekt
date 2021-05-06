@@ -210,7 +210,7 @@ void ADC2_Lightsensor (uint16_t ADC_Current_Value)
  // -------- Variables --------- //
 // ---------------------------- //
 	// Limits used for deciding day/night
-	// 500 used as this is equivalent to dark room when sun sets
+	// 125 used as this is equivalent to dark room when sun sets
 	const uint16_t ADC_Threshold_Value = 125;
 
 	// State-machine
